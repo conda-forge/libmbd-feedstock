@@ -12,6 +12,7 @@ cmake_options=(
    "-DCMAKE_INSTALL_LIBDIR=lib"
    "-DENABLE_SCALAPACK_MPI=${MPI}"
    "-DLAPACK_LIBRARIES=lapack;blas"
+   "-DSCALAPACK_LIBRARIES=scalapack"
    "-GNinja"
    ".."
 )
