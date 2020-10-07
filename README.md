@@ -5,11 +5,11 @@ Home: https://github.com/jhrmnn/libmbd
 
 Package license: MPL-2.0
 
-Feedstock license: BSD-3-Clause
+Feedstock license: [BSD-3-Clause](https://github.com/conda-forge/libmbd-feedstock/blob/master/LICENSE.txt)
 
 Summary: Many-body dispersion library
 
-
+Documentation: https://jhrmnn.github.io/libmbd
 
 Current build status
 ====================
