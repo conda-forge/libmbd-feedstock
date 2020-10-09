@@ -171,4 +171,5 @@ Feedstock Maintainers
 =====================
 
 * [@awvwgk](https://github.com/awvwgk/)
+* [@jhrmnn](https://github.com/jhrmnn/)
 
