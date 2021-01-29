@@ -1,6 +1,6 @@
 mpi:
   - nompi
-  - mpich<3.4
+  - mpich
   - openmpi
 pin_run_as_build:
   mpich: x.x
