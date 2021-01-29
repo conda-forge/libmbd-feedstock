@@ -38,7 +38,7 @@ requirements:
     - ninja
   host:
     - {{ mpi }}  # [mpi != "nompi"]
-    - mpich <=3.3.2  # [mpi == 'mpich']
+    - mpich !=3.4  # [mpi == 'mpich']
     - scalapack  # [mpi != "nompi"]
     - libblas
     - liblapack
@@ -46,7 +46,7 @@ requirements:
     - libgomp  # [linux and not aarch64]
   run:
     - {{ mpi }}  # [mpi != "nompi"]
-    - mpich <=3.3.2  # [mpi == "mpich"]
+    - mpich !=3.4  # [mpi == "mpich"]
     - scalapack  # [mpi != "nompi"]
     - libblas
     - liblapack
