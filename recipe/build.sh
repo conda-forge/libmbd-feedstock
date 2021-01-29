@@ -19,7 +19,7 @@ cmake_options=(
 
 mkdir -p _build
 pushd _build
-cmake "${cmake_options[@]}"
+cmake ${CMAKE_ARGS} -LAH "${cmake_options[@]}"
 
 ninja all install
 
