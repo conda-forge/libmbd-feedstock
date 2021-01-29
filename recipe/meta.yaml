@@ -46,14 +46,13 @@ requirements:
     - libgomp  # [linux and not aarch64]
   run:
     - {{ mpi }}  # [mpi != "nompi"]
-    - mpich !=3.4  # [mpi == "mpich"]
     - scalapack  # [mpi != "nompi"]
     - libblas
     - liblapack
 
 test:
   commands:
-    - test -f $PREFIX/lib/libnegf${SHLIB_EXT}
+    - test -f $PREFIX/lib/libmbd${SHLIB_EXT}
 
 about:
   home: https://github.com/jhrmnn/{{ name }}
