@@ -13,13 +13,14 @@ cmake_options=(
    "-DENABLE_SCALAPACK_MPI=${MPI}"
    "-DLAPACK_LIBRARIES=lapack;blas"
    "-DSCALAPACK_LIBRARIES=scalapack"
+   "-DMPI_HOME=${PREFIX}"
    "-GNinja"
    ".."
 )
 
 mkdir -p _build
 pushd _build
-cmake "${cmake_options[@]}"
+cmake ${CMAKE_ARGS} -LAH "${cmake_options[@]}"
 
 ninja all install
 
