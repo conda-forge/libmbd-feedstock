@@ -13,7 +13,7 @@ cmake_options=(
    "-DENABLE_SCALAPACK_MPI=${MPI}"
    "-DLAPACK_LIBRARIES=lapack;blas"
    "-DSCALAPACK_LIBRARIES=scalapack"
-   "-DMPI_HOME=${PREFIX}"
+   "-DMPI_CXX_SKIP_MPICXX"
    "-GNinja"
    ".."
 )
