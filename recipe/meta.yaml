@@ -34,7 +34,7 @@ requirements:
   build:
     - {{ compiler('c') }}  # [osx]
     - {{ compiler('fortran') }}
-    - cmake <=3.18.4
+    - cmake
     - ninja
   host:
     - {{ mpi }}  # [mpi != "nompi"]
