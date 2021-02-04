@@ -1,6 +1,6 @@
 {% set name = "libmbd" %}
 {% set version = "0.10.4" %}
-{% set build = 0 %}
+{% set build = 1 %}
 {% set mpi = mpi or "nompi" %}
 
 package:
@@ -34,11 +34,10 @@ requirements:
   build:
     - {{ compiler('c') }}  # [osx]
     - {{ compiler('fortran') }}
-    - cmake
+    - cmake <=3.18.4
     - ninja
   host:
     - {{ mpi }}  # [mpi != "nompi"]
-    - mpich !=3.4  # [mpi == 'mpich']
     - scalapack  # [mpi != "nompi"]
     - libblas
     - liblapack
