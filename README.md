@@ -15,7 +15,21 @@ Current build status
 ====================
 
 
-<table>
+<table><tr>
+    <td>Travis</td>
+    <td>
+      <a href="https://travis-ci.com/conda-forge/libmbd-feedstock">
+        <img alt="macOS" src="https://img.shields.io/travis/com/conda-forge/libmbd-feedstock/master.svg?label=macOS">
+      </a>
+    </td>
+  </tr><tr>
+    <td>Drone</td>
+    <td>
+      <a href="https://cloud.drone.io/conda-forge/libmbd-feedstock">
+        <img alt="linux" src="https://img.shields.io/drone/build/conda-forge/libmbd-feedstock/master.svg?label=Linux">
+      </a>
+    </td>
+  </tr>
     
   <tr>
     <td>Azure</td>
@@ -47,6 +61,48 @@ Current build status
               <td>
                 <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=10403&branchName=master">
                   <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/libmbd-feedstock?branchName=master&jobName=linux&configuration=linux_64_mpiopenmpi" alt="variant">
+                </a>
+              </td>
+            </tr><tr>
+              <td>linux_aarch64_mpimpich</td>
+              <td>
+                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=10403&branchName=master">
+                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/libmbd-feedstock?branchName=master&jobName=linux&configuration=linux_aarch64_mpimpich" alt="variant">
+                </a>
+              </td>
+            </tr><tr>
+              <td>linux_aarch64_mpinompi</td>
+              <td>
+                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=10403&branchName=master">
+                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/libmbd-feedstock?branchName=master&jobName=linux&configuration=linux_aarch64_mpinompi" alt="variant">
+                </a>
+              </td>
+            </tr><tr>
+              <td>linux_aarch64_mpiopenmpi</td>
+              <td>
+                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=10403&branchName=master">
+                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/libmbd-feedstock?branchName=master&jobName=linux&configuration=linux_aarch64_mpiopenmpi" alt="variant">
+                </a>
+              </td>
+            </tr><tr>
+              <td>linux_ppc64le_mpimpich</td>
+              <td>
+                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=10403&branchName=master">
+                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/libmbd-feedstock?branchName=master&jobName=linux&configuration=linux_ppc64le_mpimpich" alt="variant">
+                </a>
+              </td>
+            </tr><tr>
+              <td>linux_ppc64le_mpinompi</td>
+              <td>
+                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=10403&branchName=master">
+                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/libmbd-feedstock?branchName=master&jobName=linux&configuration=linux_ppc64le_mpinompi" alt="variant">
+                </a>
+              </td>
+            </tr><tr>
+              <td>linux_ppc64le_mpiopenmpi</td>
+              <td>
+                <a href="https://dev.azure.com/conda-forge/feedstock-builds/_build/latest?definitionId=10403&branchName=master">
+                  <img src="https://dev.azure.com/conda-forge/feedstock-builds/_apis/build/status/libmbd-feedstock?branchName=master&jobName=linux&configuration=linux_ppc64le_mpiopenmpi" alt="variant">
                 </a>
               </td>
             </tr><tr>
@@ -92,6 +148,7 @@ Installing `libmbd` from the `conda-forge` channel can be achieved by adding `co
 
 ```
 conda config --add channels conda-forge
+conda config --set channel_priority strict
 ```
 
 Once the `conda-forge` channel has been enabled, `libmbd` can be installed with:
