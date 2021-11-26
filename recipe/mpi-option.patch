@@ -1,0 +1,13 @@
+diff --git a/tests/CMakeLists.txt b/tests/CMakeLists.txt
+index 09bd1ae..6e5fa53 100644
+--- a/tests/CMakeLists.txt
++++ b/tests/CMakeLists.txt
+@@ -24,7 +24,7 @@ if(ENABLE_SCALAPACK_MPI)
+     if(NOT "${MPI_NODES}")
+         set(MPI_NODES ${MPIEXEC_MAX_NUMPROCS})
+     endif()
+-    set(MPIEXEC_EXTRA_FLAGS "--oversubscribe")
++    set(MPIEXEC_EXTRA_FLAGS $ENV{MPIEXEC_EXTRA_FLAGS})
+ endif()
+ foreach(TEST ${TESTS})
+     string(REPLACE "/" ";" TEST_APP_CASE ${TEST})
