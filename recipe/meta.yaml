@@ -8,8 +8,8 @@ package:
   version: {{ version }}
 
 source:
-  url: https://github.com/libmbd/{{ name }}/archive/{{ version }}.tar.gz
-  sha256: fae4b66cb7b9e4cb0720dac254aa67717447b81c73bc39bab3b0d4f789e5ceaa
+  url: https://github.com/libmbd/libmbd/releases/download/{{ version }}/{{ name }}-{{ version }}.tar.gz
+  sha256: 7641fd1831659fa5b22882018efe738b5c973ff5581d57afa6594590e70d4e40
 
 {% if mpi == "nompi" %}
 {% set build = build + 100 %}
