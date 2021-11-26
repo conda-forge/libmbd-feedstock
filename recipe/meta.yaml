@@ -12,6 +12,7 @@ source:
   sha256: 7641fd1831659fa5b22882018efe738b5c973ff5581d57afa6594590e70d4e40
   patches:
     - mpi-option.patch
+    - gradient-threshold.patch
 
 {% if mpi == "nompi" %}
 {% set build = build + 100 %}
