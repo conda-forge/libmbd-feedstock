@@ -1,6 +1,6 @@
 {% set name = "libmbd" %}
 {% set version = "0.12.2" %}
-{% set build = 0 %}
+{% set build = 1 %}
 {% set mpi = mpi or "nompi" %}
 
 package:
@@ -39,18 +39,19 @@ requirements:
     - {{ compiler('fortran') }}
     - cmake
     - ninja
+    - pkg-config
+    - llvm-openmp  # [osx]
+    - libgomp  # [linux]
   host:
     - {{ mpi }}  # [mpi != "nompi"]
     - scalapack  # [mpi != "nompi"]
+    - elsi  # [mpi != "nompi"]
     - libblas
     - liblapack
-    - llvm-openmp  # [osx]
-    - libgomp  # [linux and not aarch64]
   run:
     - {{ mpi }}  # [mpi != "nompi"]
     - scalapack  # [mpi != "nompi"]
-    - libblas
-    - liblapack
+    - elsi  # [mpi != "nompi"]
 
 test:
   commands:

@@ -18,6 +18,3 @@ mpi:
 - openmpi
 target_platform:
 - linux-64
-zip_keys:
-- - cdt_name
-  - docker_image
