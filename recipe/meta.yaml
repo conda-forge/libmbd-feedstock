@@ -11,7 +11,7 @@ source:
   url: https://github.com/libmbd/libmbd/releases/download/{{ version }}/{{ name }}-{{ version }}.tar.gz
   sha256: 7641fd1831659fa5b22882018efe738b5c973ff5581d57afa6594590e70d4e40
   patches:
-    - 0.12.2-eb665965.patch
+    - 0.12.2-hotfix.patch
 
 {% if mpi == "nompi" %}
 {% set build = build + 100 %}
