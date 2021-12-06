@@ -27,7 +27,7 @@ mkdir -p _build
 pushd _build
 cmake ${CMAKE_ARGS} -LAH "${cmake_options[@]}"
 
-ninja all
+ninja -v all
 ctest --output-on-failure
 ninja install
 
