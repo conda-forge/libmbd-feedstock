@@ -1,0 +1,504 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ca84c6f..eb2726f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,8 +1,6 @@
+-cmake_minimum_required(VERSION 3.9)
++cmake_minimum_required(VERSION 3.14)
+ cmake_policy(SET CMP0042 NEW)
+-if(NOT CMAKE_VERSION VERSION_LESS 3.13)
+-    cmake_policy(SET CMP0077 NEW)
+-endif()
++cmake_policy(SET CMP0077 NEW)
+ 
+ set(CMAKE_USER_MAKE_RULES_OVERRIDE_Fortran
+   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/fortran_flags_override.cmake")
+@@ -32,66 +30,76 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+     set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}")
+ endif()
+ 
+-separate_arguments(MKL_LIBRARIES)
+-if(NOT DEFINED LAPACK_LIBRARIES AND NOT DEFINED MKL_LIBRARIES)
+-    find_package(LAPACK)
+-    if(NOT LAPACK_FOUND)
+-        message(SEND_ERROR "BLAS/LAPACK not found, specify custom installation with \
+-LAPACK_LIBRARIES or MKL_LIBRARIES variable")
++if(NOT TARGET LAPACK::LAPACK)
++    find_package(LAPACK REQUIRED)
++    if(CMAKE_VERSION VERSION_LESS 3.18)
++        add_library(LAPACK::LAPACK INTERFACE IMPORTED)
++        target_link_libraries(scalapack INTERFACE "${LAPACK_LINKER_FLAGS} ${LAPACK_LIBRARIES}")
+     endif()
+ endif()
+ 
+ if(ENABLE_SCALAPACK_MPI)
+-    find_package(MPI)
+-    if(NOT MPI_Fortran_FOUND)
+-        message(SEND_ERROR "MPI not found, specify the MPI Fortran compiler with \
+-MPI_Fortran_COMPILER variable")
++    if(NOT TARGET MPI::MPI_Fortran)
++        find_package(MPI REQUIRED)
++        if(APPLE)
++            # -flat_namespace (Darwin-specific) is causing a crash (seg fault) when the
++            # Fortran library is called from Python and one writes into a character
++            # variable, but only when the kind is the default one. It causes the
++            # written to variable to appear as being four times shorter than it is.
++            # Only mention of anything possibly related I could find is at
++            #
++            #   https://trac.mpich.org/projects/mpich/ticket/1590
++            get_target_property(_VALUE MPI::MPI_Fortran INTERFACE_LINK_OPTIONS)
++            string(REGEX REPLACE "-Wl\\$<COMMA>-flat_namespace ?" "" _VALUE "${_VALUE}")
++            set_target_properties(MPI::MPI_Fortran PROPERTIES INTERFACE_LINK_OPTIONS "${_VALUE}")
++        endif()
+     endif()
+-    if(APPLE)
+-        # -flat_namespace (Darwin-specific) is causing a crash (seg fault) when the
+-        # Fortran library is called from Python and one writes into a character
+-        # variable, but only when the kind is the default one. It causes the
+-        # written to variable to appear as being four times shorter than it is.
+-        # Only mention of anything possibly related I could find is at
+-        #
+-        #   https://trac.mpich.org/projects/mpich/ticket/1590
+-        string(REPLACE "-Wl,-flat_namespace" ""
+-            MPI_Fortran_LINK_FLAGS "${MPI_Fortran_LINK_FLAGS}")
+-        string(STRIP "${MPI_Fortran_LINK_FLAGS}" MPI_Fortran_LINK_FLAGS)
+-    endif()
+-    if(NOT DEFINED SCALAPACK_LIBRARIES AND NOT DEFINED MKL_LIBRARIES)
+-        find_package(PkgConfig)
+-        if(PkgConfig_FOUND)
+-            pkg_search_module(scalapack scalapack scalapack-openmpi)
+-            if(scalapack_FOUND)
+-                message(STATUS "ScaLAPACK pkg-config package found, version ${scalapack_VERSION}")
+-                set(SCALAPACK_LIBRARIES "${scalapack_LDFLAGS}")
++    if(NOT TARGET scalapack AND NOT DEFINED SCALAPACK_LIBRARY)
++        find_package(scalapack QUIET)
++        if(scalapack_FOUND)
++            message(STATUS "ScaLAPACK CMake package found in ${scalapack_DIR}")
++        else()
++            find_package(PkgConfig)
++            if(PkgConfig_FOUND)
++                unset(scalapack_FOUND CACHE)
++                pkg_search_module(scalapack scalapack scalapack-openmpi)
++                if(scalapack_FOUND)
++                    message(STATUS "ScaLAPACK pkg-config package found, version ${scalapack_VERSION}")
++                    set(SCALAPACK_LIBRARY "${scalapack_LDFLAGS}")
++                endif()
+             endif()
+         endif()
+         if(NOT scalapack_FOUND)
+-            unset(scalapack_FOUND CACHE)
+-            find_package(scalapack QUIET)
+-            if(scalapack_FOUND)
+-                message(STATUS "ScaLAPACK CMake package found in ${scalapack_DIR}")
+-            endif()
+-        endif()
+-        if(NOT scalapack_FOUND)
+-            message(SEND_ERROR "ScaLAPACK pkg-config or Cmake package not found, \
+-specify custom installation with SCALAPACK_LIBRARIES or MKL_LIBRARIES variable")
++            message(SEND_ERROR "ScaLAPACK Cmake or pkg-config package not found, \
++specify custom installation with SCALAPACK_LIBRARY")
+         endif()
+     endif()
++    if(NOT TARGET scalapack AND DEFINED SCALAPACK_LIBRARY)
++        add_library(scalapack INTERFACE IMPORTED)
++        target_link_libraries(scalapack INTERFACE "${SCALAPACK_LIBRARY}")
++    endif()
+ endif()
+ 
+-if(ENABLE_ELSI)
+-    if(NOT DEFINED ELSI_LIBRARIES)
+-        find_package(elsi 2.0 QUIET)
+-        if(elsi_FOUND)
+-            message(STATUS "ELSI CMake package found in ${elsi_DIR}")
+-        else()
+-            message(SEND_ERROR "ELSI CMake package not found, specify custom \
+-installation with ELSI_LIBRARIES variable")
++if(ENABLE_ELSI AND NOT TARGET elsi::elsi)
++    find_package(elsi 2.0 QUIET)
++    if(elsi_FOUND)
++        message(STATUS "ELSI CMake package found in ${elsi_DIR}")
++    else()
++        find_package(PkgConfig)
++        if(PkgConfig_FOUND)
++            unset(elsi_FOUND CACHE)
++            pkg_search_module(elsi elsi)
++            if(elsi_FOUND)
++                message(STATUS "ELSI pkg-config package found, version ${elsi_VERSION}")
++                add_library(elsi::elsi INTERFACE IMPORTED)
++                target_link_libraries(elsi::elsi INTERFACE "${ELSI_LINK_LIBRARIES}")
++                target_include_directories(elsi::elsi INTERFACE "${ELSI_INCLUDE_DIRS}")
++            endif()
+         endif()
+     endif()
++    if(NOT elsi_FOUND)
++        message(SEND_ERROR "ELSI Cmake or pkg-config package not found")
++    endif()
+ endif()
+ 
+ add_subdirectory(src)
+diff --git a/cmake/LibmbdVersion.cmake b/cmake/LibmbdVersion.cmake
+index d906686..b1016ea 100644
+--- a/cmake/LibmbdVersion.cmake
++++ b/cmake/LibmbdVersion.cmake
+@@ -6,8 +6,14 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+         ERROR_QUIET
+         OUTPUT_STRIP_TRAILING_WHITESPACE)
+     message(STATUS "Setting version tag to ${VERSION_TAG} from Git")
+-else()
++elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/LibmbdVersionTag.cmake")
+     include(LibmbdVersionTag)
++else()
++    message(FATAL_ERROR
++        "Not in a Git repository and version tag is missing, you most likely "
++        "attempt to install from a copy of the source tree. Obtain the source "
++        "distribution (libmbd-<version>.tar.gz) from a Github release page "
++        "instead.")
+ endif()
+ 
+ set(PROJECT_VERSION ${VERSION_TAG})
+diff --git a/src/mbd_hamiltonian.F90 b/src/mbd_hamiltonian.F90
+index 408fe60..e562ee9 100644
+--- a/src/mbd_hamiltonian.F90
++++ b/src/mbd_hamiltonian.F90
+@@ -125,7 +125,7 @@ type(result_t) function get_mbd_hamiltonian_energy_complex( &
+     if (geom%get_modes .or. grad%any()) then
+         call modes%alloc_from(relay)
+         allocate (eigs(3 * n_atoms))
+-        call modes%eigh(eigs, geom%exc, src=relay)
++        call modes%eigh(eigs, geom%exc, src=relay, clock=geom%timer)
+         if (geom%get_modes) then
+ #ifndef DO_COMPLEX_TYPE
+             call move_alloc(modes%val, res%modes)
+@@ -157,11 +157,14 @@ type(result_t) function get_mbd_hamiltonian_energy_complex( &
+     call geom%clock(22)
+     call c_lambda12i_c%copy_from(modes)
+     call c_lambda12i_c%mult_cols_3n(eigs**(-1d0 / 4))
++    call geom%clock(14)
+     c_lambda12i_c = c_lambda12i_c%mmul(c_lambda12i_c, transB='C')
++    call geom%clock(-14)
+ #ifdef DO_COMPLEX_TYPE
+     c_lambda12i_c%val = conjg(c_lambda12i_c%val)
+ #endif
+     call dQ%init_from(T)
++    call geom%clock(15)
+     if (grad%dcoords) then
+         allocate (res%dE%dcoords(n_atoms, 3))
+         do i_xyz = 1, 3
+@@ -214,6 +217,7 @@ type(result_t) function get_mbd_hamiltonian_energy_complex( &
+         end do
+     end if
+ #endif
++    call geom%clock(-15)
+     call geom%clock(-22)
+ end function
+ 
+diff --git a/src/mbd_matrix.F90 b/src/mbd_matrix.F90
+index 73c0572..a4b1293 100644
+--- a/src/mbd_matrix.F90
++++ b/src/mbd_matrix.F90
+@@ -330,24 +330,27 @@ subroutine matrix_cplx_mult_col(this, idx, a)
+ end subroutine
+ 
+ #ifndef DO_COMPLEX_TYPE
+-subroutine matrix_re_eigh(A, eigs, exc, src, vals_only)
++subroutine matrix_re_eigh(A, eigs, exc, src, vals_only, clock)
+     class(matrix_re_t), intent(inout) :: A
+     type(matrix_re_t), intent(in), optional :: src
+ #else
+-subroutine matrix_cplx_eigh(A, eigs, exc, src, vals_only)
++subroutine matrix_cplx_eigh(A, eigs, exc, src, vals_only, clock)
+     class(matrix_cplx_t), intent(inout) :: A
+     type(matrix_cplx_t), intent(in), optional :: src
+ #endif
+     real(dp), intent(out) :: eigs(:)
+     type(exception_t), intent(out), optional :: exc
+     logical, intent(in), optional :: vals_only
++    type(clock_t), intent(inout), optional :: clock
+ 
+ #ifdef WITH_SCALAPACK
+     if (A%idx%parallel) then
+ #   ifdef WITH_ELSI
++        if (present(clock)) call clock%clock(18)
+         call elsi_eigh(A%val, A%blacs, eigs, exc, src%val, vals_only)
++        if (present(clock)) call clock%clock(-18)
+ #   else
+-        call peigh(A%val, A%blacs, eigs, exc, src%val, vals_only)
++        call peigh(A%val, A%blacs, eigs, exc, src%val, vals_only, clock)
+ #   endif
+         return
+     end if
+@@ -559,10 +562,11 @@ end function
+ #   define DO_COMPLEX_TYPE
+ #include "mbd_matrix.F90"
+ 
+-subroutine matrix_re_invh(A, exc, src)
++subroutine matrix_re_invh(A, exc, src, clock)
+     class(matrix_re_t), intent(inout) :: A
+     type(matrix_re_t), intent(in), optional :: src
+     type(exception_t), intent(out), optional :: exc
++    type(clock_t), intent(inout), optional :: clock
+ 
+ #ifdef WITH_SCALAPACK
+     if (.not. A%idx%parallel) then
+@@ -573,9 +577,9 @@ subroutine matrix_re_invh(A, exc, src)
+         end if
+     else
+         if (present(src)) then
+-            call pinvh(A%val, A%blacs, exc, src%val)
++            call pinvh(A%val, A%blacs, exc, src%val, clock=clock)
+         else
+-            call pinvh(A%val, A%blacs, exc)
++            call pinvh(A%val, A%blacs, exc, clock=clock)
+         end if
+     end if
+ #else
+diff --git a/src/mbd_scalapack.f90 b/src/mbd_scalapack.f90
+index a4a2a5f..1778ff7 100644
+--- a/src/mbd_scalapack.f90
++++ b/src/mbd_scalapack.f90
+@@ -36,11 +36,12 @@ external :: PDSYEV, PZHEEV, PDGETRF, PDGETRI, PDGEMM, PZGEMM
+ 
+ contains
+ 
+-subroutine pinvh_real(A, blacs, exc, src)
++subroutine pinvh_real(A, blacs, exc, src, clock)
+     real(dp), intent(inout) :: A(:, :)
+     type(blacs_desc_t), intent(in) :: blacs
+     type(exception_t), intent(out), optional :: exc
+     real(dp), intent(in), optional :: src(:, :)
++    type(clock_t), intent(inout), optional :: clock
+ 
+     integer, allocatable :: i_pivot(:), iwork_arr(:)
+     real(dp), allocatable :: work_arr(:)
+@@ -51,7 +52,9 @@ subroutine pinvh_real(A, blacs, exc, src)
+     if (n == 0) return
+     if (present(src)) A = src
+     allocate (i_pivot(n))
++    if (present(clock)) call clock%clock(16)
+     call PDGETRF(n, n, A, 1, 1, blacs%desc, i_pivot, error_flag)
++    if (present(clock)) call clock%clock(-16)
+     if (error_flag /= 0) then
+         if (present(exc)) then
+             exc%code = MBD_EXC_LINALG
+@@ -66,9 +69,12 @@ subroutine pinvh_real(A, blacs, exc, src)
+     )
+     n_work_arr = nint(n_work_arr_optim(1))
+     allocate (work_arr(n_work_arr), iwork_arr(n_iwork_arr(1)))
++    if (present(clock)) call clock%clock(17)
+     call PDGETRI( &
+         n, A, 1, 1, blacs%desc, i_pivot, &
+-        work_arr, n_work_arr, iwork_arr, n_iwork_arr(1), error_flag)
++        work_arr, n_work_arr, iwork_arr, n_iwork_arr(1), error_flag &
++    )
++    if (present(clock)) call clock%clock(-17)
+     if (error_flag /= 0) then
+         if (present(exc)) then
+             exc%code = MBD_EXC_LINALG
+@@ -139,19 +145,17 @@ subroutine peigh_real(A, blacs, eigs, exc, src, vals_only, clock)
+     else
+         allocate (vectors(1, 1))
+     end if
+-    if (present(clock)) call clock%clock(61)
+     call PDSYEV( &
+         mode(vals_only), 'U', n, A, 1, 1, blacs%desc, eigs, vectors, &
+         1, 1, blacs%desc, n_work_arr, -1, error_flag &
+     )
+-    if (present(clock)) call clock%clock(-61)
+     allocate (work_arr(nint(n_work_arr(1))))
+-    if (present(clock)) call clock%clock(62)
++    if (present(clock)) call clock%clock(13)
+     call PDSYEV( &
+         mode(vals_only), 'U', n, A, 1, 1, blacs%desc, eigs, vectors, &
+         1, 1, blacs%desc, work_arr(1), size(work_arr), error_flag &
+     )
+-    if (present(clock)) call clock%clock(-62)
++    if (present(clock)) call clock%clock(-13)
+     if (error_flag /= 0) then
+         if (present(exc)) then
+             exc%code = MBD_EXC_LINALG
+@@ -163,13 +167,14 @@ subroutine peigh_real(A, blacs, eigs, exc, src, vals_only, clock)
+     if (mode(vals_only) == 'V') A = vectors
+ end subroutine
+ 
+-subroutine peigh_complex(A, blacs, eigs, exc, src, vals_only)
++subroutine peigh_complex(A, blacs, eigs, exc, src, vals_only, clock)
+     complex(dp), intent(inout) :: A(:, :)
+     type(blacs_desc_t), intent(in) :: blacs
+     real(dp), intent(out) :: eigs(:)
+     type(exception_t), intent(out), optional :: exc
+     complex(dp), intent(in), optional :: src(:, :)
+     logical, intent(in), optional :: vals_only
++    type(clock_t), intent(inout), optional :: clock
+ 
+     complex(dp), allocatable :: work_arr(:), vectors(:, :)
+     integer :: n_work_arr, n_rwork_arr
+@@ -198,11 +203,13 @@ subroutine peigh_complex(A, blacs, eigs, exc, src, vals_only)
+     end if
+     allocate (work_arr(n_work_arr), source=(0d0, 0d0))
+     allocate (rwork_arr(n_rwork_arr), source=0d0)
++    if (present(clock)) call clock%clock(13)
+     call PZHEEV( &
+         mode(vals_only), 'U', n, A, 1, 1, blacs%desc, eigs, vectors, &
+         1, 1, blacs%desc, work_arr, n_work_arr, rwork_arr, n_rwork_arr, &
+         error_flag &
+     )
++    if (present(clock)) call clock%clock(-13)
+     if (error_flag /= 0) then
+         if (present(exc)) then
+             exc%code = MBD_EXC_LINALG
+diff --git a/src/mbd_scs.f90 b/src/mbd_scs.f90
+index 836eece..1d69ed7 100644
+--- a/src/mbd_scs.f90
++++ b/src/mbd_scs.f90
+@@ -82,7 +82,7 @@ function run_scs(geom, alpha, damp, dalpha_scs, grad) result(alpha_scs)
+     end if
+     call alpha_full%add_diag(1d0 / alpha)
+     call geom%clock(32)
+-    call alpha_full%invh(geom%exc)
++    call alpha_full%invh(geom%exc, clock=geom%timer)
+     if (geom%has_exc()) return
+     call geom%clock(-32)
+     alpha_scs = alpha_full%contract_n33diag_cols()
+@@ -104,10 +104,10 @@ function run_scs(geom, alpha, damp, dalpha_scs, grad) result(alpha_scs)
+         end do
+         do i_xyz = 1, 3
+             dQ%val = -dT%dr(:, :, i_xyz)
+-            call geom%clock(34)
++            call geom%clock(14)
+             dQ = alpha_full%mmul(dQ)
+-            call geom%clock(-34)
+-            call geom%clock(35)
++            call geom%clock(-14)
++            call geom%clock(15)
+             call dQ%contract_n_transp('C', B_prime)
+             do i_atom = 1, n_atoms
+                 grads_i = contract_cross_33( &
+@@ -119,7 +119,7 @@ function run_scs(geom, alpha, damp, dalpha_scs, grad) result(alpha_scs)
+                         grads_i(geom%idx%j_atom)
+                 end if
+             end do
+-            call geom%clock(-35)
++            call geom%clock(-15)
+         end do
+     end if
+     if (grad%dlattice) then
+@@ -129,13 +129,17 @@ function run_scs(geom, alpha, damp, dalpha_scs, grad) result(alpha_scs)
+         do i_latt = 1, 3
+             do i_xyz = 1, 3
+                 dQ%val = -dT%dlattice(:, :, i_latt, i_xyz)
++                call geom%clock(14)
+                 dQ = alpha_full%mmul(dQ)
+                 dQ = dQ%mmul(alpha_full)
++                call geom%clock(-14)
++                call geom%clock(15)
+                 dalphadA = dQ%contract_n33diag_cols()
+                 do concurrent(my_i_atom=1:size(geom%idx%i_atom))
+                     dalpha_scs(my_i_atom)%dlattice(i_latt, i_xyz) &
+                         = dalphadA(geom%idx%i_atom(my_i_atom))
+                 end do
++                call geom%clock(-15)
+             end do
+         end do
+     end if
+@@ -147,7 +151,10 @@ function run_scs(geom, alpha, damp, dalpha_scs, grad) result(alpha_scs)
+             call dQ%mult_col(i_atom, dsij_dsi)
+         end do
+         call dQ%add_diag(-0.5d0 / alpha**2)
++        call geom%clock(14)
+         dQ = alpha_full%mmul(dQ)
++        call geom%clock(-14)
++        call geom%clock(15)
+         call dQ%contract_n_transp('C', B_prime)
+         do i_atom = 1, n_atoms
+             grads_i = contract_cross_33( &
+@@ -158,10 +165,14 @@ function run_scs(geom, alpha, damp, dalpha_scs, grad) result(alpha_scs)
+                 dalpha_scs(my_i_atom)%dalpha = grads_i(geom%idx%j_atom)
+             end if
+         end do
++        call geom%clock(-15)
+     end if
+     if (grad%dr_vdw) then
+         dQ%val = dT%dvdw
++        call geom%clock(14)
+         dQ = alpha_full%mmul(dQ)
++        call geom%clock(-14)
++        call geom%clock(15)
+         call dQ%contract_n_transp('C', B_prime)
+         do i_atom = 1, n_atoms
+             grads_i = contract_cross_33( &
+@@ -172,6 +183,7 @@ function run_scs(geom, alpha, damp, dalpha_scs, grad) result(alpha_scs)
+                 dalpha_scs(my_i_atom)%dr_vdw = grads_i(geom%idx%j_atom)
+             end if
+         end do
++        call geom%clock(-15)
+     end if
+     call geom%clock(-33)
+ end function
+diff --git a/src/mbd_utils.F90 b/src/mbd_utils.F90
+index 8e46a0d..2b3d94c 100644
+--- a/src/mbd_utils.F90
++++ b/src/mbd_utils.F90
+@@ -236,12 +236,18 @@ subroutine clock_print(this)
+ #endif
+     call system_clock(cnt, rate, cnt_max)
+ 
+-    print '(A5,A7,A20,A10,A10)', 'id', 'level', 'label', 'count', 'time (s)'
++    print '(A5,A7,A20,A10,A16)', 'id', 'level', 'label', 'count', 'time (s)'
+     do i = 1, size(this%counts)
+         if (this%counts(i) == 0) cycle
+         select case (i)
+         case (11); label = 'dipmat real'
+         case (12); label = 'dipmat rec'
++        case (13); label = 'P_EVR'
++        case (14); label = 'mmul'
++        case (15); label = 'force contractions'
++        case (16); label = 'PDGETRF'
++        case (17); label = 'PDGETRI'
++        case (18); label = 'ELSI ev'
+         case (20); label = 'MBD dipole'
+         case (21); label = 'MBD eig'
+         case (22); label = 'MBD forces'
+@@ -249,8 +255,6 @@ subroutine clock_print(this)
+         case (30); label = 'SCS dipole'
+         case (32); label = 'SCS inv'
+         case (33); label = 'SCS forces'
+-        case (34); label = 'SCS forces mmul'
+-        case (35); label = 'SCS forces contract'
+         case (50); label = 'SCS'
+         case (51); label = 'MBD k-point'
+         case (52); label = 'MBD'
+@@ -259,7 +263,7 @@ subroutine clock_print(this)
+         case default
+             label = '('//trim(tostr(i))//')'
+         end select
+-        print '(I5,I7,"  ",A20,I10,F10.3)', i, this%levels(i), label, this%counts(i), &
++        print '(I5,I7,"  ",A20,I10,F16.6)', i, this%levels(i), label, this%counts(i), &
+             dble(this%timestamps(i)) / rate
+     end do
+ end subroutine
+diff --git a/tests/CMakeLists.txt b/tests/CMakeLists.txt
+index 09bd1ae..6e5fa53 100644
+--- a/tests/CMakeLists.txt
++++ b/tests/CMakeLists.txt
+@@ -24,7 +24,7 @@ if(ENABLE_SCALAPACK_MPI)
+     if(NOT "${MPI_NODES}")
+         set(MPI_NODES ${MPIEXEC_MAX_NUMPROCS})
+     endif()
+-    set(MPIEXEC_EXTRA_FLAGS "--oversubscribe")
++    set(MPIEXEC_EXTRA_FLAGS $ENV{MPIEXEC_EXTRA_FLAGS})
+ endif()
+ foreach(TEST ${TESTS})
+     string(REPLACE "/" ";" TEST_APP_CASE ${TEST})
+diff --git a/tests/mbd_grad_test_cases.f90 b/tests/mbd_grad_test_cases.f90
+index d87816c..19a0b3f 100644
+--- a/tests/mbd_grad_test_cases.f90
++++ b/tests/mbd_grad_test_cases.f90
+@@ -269,7 +269,7 @@ subroutine test_mbd_ewald_deriv_expl()
+     end do
+     call geom%destroy()
+     diff = (gradients - gradients_anl) / gradients_anl
+-    if (failed(maxval(abs(diff)), 1d-8)) then
++    if (failed(maxval(abs(diff)), 2d-8)) then
+         call print_matrix('delta gradients', diff)
+         call print_matrix('anl', gradients_anl)
+         call print_matrix('num', gradients)

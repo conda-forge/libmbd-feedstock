@@ -3,10 +3,8 @@ set -ex
 
 if [ "${mpi}" != "nompi" ]; then
   MPI=ON
-  ELSI_LIBRARIES="$(pkg-config elsi --libs)"
 else
   MPI=OFF
-  ELSI_LIBRARIES=""
 fi
 
 if [ "${mpi}" == "openmpi" ]; then
@@ -18,11 +16,9 @@ fi
 cmake_options=(
    "-DCMAKE_INSTALL_PREFIX=${PREFIX}"
    "-DCMAKE_INSTALL_LIBDIR=lib"
+   "-DCMAKE_IGNORE_PATH=${PREFIX}/lib/cmake/elsi"
    "-DENABLE_SCALAPACK_MPI=${MPI}"
    "-DENABLE_ELSI=${MPI}"
-   "-DELSI_LIBRARIES=${ELSI_LIBRARIES}"
-   "-DLAPACK_LIBRARIES=lapack;blas"
-   "-DSCALAPACK_LIBRARIES=scalapack"
    "-GNinja"
    ".."
 )
