@@ -10,9 +10,6 @@ package:
 source:
   url: https://github.com/libmbd/libmbd/releases/download/{{ version }}/{{ name }}-{{ version }}.tar.gz
   sha256: ba234f34956f803c2e9eac1ddf0d423c6f232288bfdf10fb0bd932864b1471fa
-  patches:
-    - mpi-option.patch
-    - gradient-threshold.patch
 
 {% if mpi == "nompi" %}
 {% set build = build + 100 %}
