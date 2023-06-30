@@ -1,5 +1,5 @@
 {% set name = "libmbd" %}
-{% set version = "0.12.6" %}
+{% set version = "0.12.7" %}
 {% set build = 0 %}
 {% set mpi = mpi or "nompi" %}
 
@@ -9,7 +9,7 @@ package:
 
 source:
   url: https://github.com/libmbd/libmbd/releases/download/{{ version }}/{{ name }}-{{ version }}.tar.gz
-  sha256: 209ead036690eac9e308a0305145c6f88bbfb583a18f0d2e4632335833d22b1a
+  sha256: f61d70c1474329dd81f7c6f2bc14ba3b392253b95889ee18d6dd6496308c9e5e
 
 {% if mpi == "nompi" %}
 {% set build = build + 100 %}
