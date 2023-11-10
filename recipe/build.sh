@@ -28,7 +28,9 @@ pushd _build
 cmake ${CMAKE_ARGS} -LAH "${cmake_options[@]}"
 
 ninja all
-ctest --output-on-failure
+if [[ "${CONDA_BUILD_CROSS_COMPILATION:-0}" == "0" ]]; then
+  ctest --output-on-failure
+fi
 ninja install
 
 popd
