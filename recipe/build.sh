@@ -29,8 +29,6 @@ cmake_options=(
    ".."
 )
 
-# Quick hack to enable compilation, should be removed if official release is the source
-echo "set(VERSION_TAG 0.12.8)" > cmake/libMBDVersionTag.cmake
 mkdir -p _build
 pushd _build
 cmake ${CMAKE_ARGS} -LAH "${cmake_options[@]}"
