@@ -3,8 +3,14 @@ set -ex
 
 if [ "${mpi}" != "nompi" ]; then
   MPI=ON
+  if [ "${target_platform}" != "osx-arm64" ]; then
+    ELSI=ON
+  else
+    ELSI=OFF
+  fi
 else
   MPI=OFF
+  ELSI=OFF
 fi
 
 if [ "${mpi}" == "openmpi" ]; then
@@ -17,7 +23,7 @@ cmake_options=(
    "-DCMAKE_INSTALL_PREFIX=${PREFIX}"
    "-DCMAKE_INSTALL_LIBDIR=lib"
    "-DENABLE_SCALAPACK_MPI=${MPI}"
-   "-DENABLE_ELSI=${MPI}"
+   "-DENABLE_ELSI=${ELSI}"
    "-DCMAKE_IGNORE_PATH=${PREFIX}/lib/cmake/elsi"
    "-GNinja"
    ".."
@@ -25,7 +31,6 @@ cmake_options=(
 
 # Quick hack to enable compilation, should be removed if official release is the source
 echo "set(VERSION_TAG 0.12.8)" > cmake/libMBDVersionTag.cmake
-
 mkdir -p _build
 pushd _build
 cmake ${CMAKE_ARGS} -LAH "${cmake_options[@]}"
