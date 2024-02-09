@@ -28,7 +28,12 @@ pushd _build
 cmake ${CMAKE_ARGS} -LAH "${cmake_options[@]}"
 
 ninja all
-ctest --output-on-failure
 ninja install
+
+if [[ "${CONDA_BUILD_CROSS_COMPILATION:-0}" == "1" ]]; then
+  exit 0
+fi
+
+ctest --output-on-failure
 
 popd
