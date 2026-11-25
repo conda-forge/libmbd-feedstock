@@ -1,5 +1,5 @@
 {% set name = "libmbd" %}
-{% set version = "0.15.0" %}
+{% set version = "0.16.0" %}
 {% set build = 0 %}
 {% set mpi = mpi or "nompi" %}
 
@@ -9,7 +9,7 @@ package:
 
 source:
   url: https://github.com/libmbd/libmbd/releases/download/{{ version }}/{{ name }}-{{ version }}.tar.gz
-  sha256: f309447547f5203c179a9c8344dbf55fd4781852d9e7f248b1c6b5da69e533c8
+  sha256: b315ce0888c65b9aa5b4bc03d1cb23baac2baec26d52c0d944d56719645639ac
 
 {% if mpi == "nompi" %}
 {% set build = build + 100 %}
@@ -45,15 +45,15 @@ requirements:
   host:
     - {{ mpi }}  # [mpi != "nompi"]
     - scalapack  # [mpi != "nompi"]
-    # ELSI is (currently) not available for osx_arm64
-    - elsi  # [mpi != "nompi" and not (osx and arm64)]
+    # ELSI is (currently) not available for osx_arm64, nor for openmpi 5
+    - elsi  # [mpi == "mpich" and not (osx and arm64)]
     - libblas
     - liblapack
   run:
     - {{ mpi }}  # [mpi != "nompi"]
     - scalapack  # [mpi != "nompi"]
-    # ELSI is (currently) not available for osx_arm64
-    - elsi  # [mpi != "nompi" and not (osx and arm64)]
+    # ELSI is (currently) not available for osx_arm64, nor for openmpi 5
+    - elsi  # [mpi == "mpich" and not (osx and arm64)]
 
 test:
   commands:
