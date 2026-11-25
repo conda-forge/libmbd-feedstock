@@ -45,15 +45,15 @@ requirements:
   host:
     - {{ mpi }}  # [mpi != "nompi"]
     - scalapack  # [mpi != "nompi"]
-    # ELSI is (currently) not available for osx_arm64
-    - elsi  # [mpi != "nompi" and not (osx and arm64)]
+    # ELSI is (currently) not available for osx_arm64, nor for openmpi 5
+    - elsi  # [mpi == "mpich" and not (osx and arm64)]
     - libblas
     - liblapack
   run:
     - {{ mpi }}  # [mpi != "nompi"]
     - scalapack  # [mpi != "nompi"]
-    # ELSI is (currently) not available for osx_arm64
-    - elsi  # [mpi != "nompi" and not (osx and arm64)]
+    # ELSI is (currently) not available for osx_arm64, nor for openmpi 5
+    - elsi  # [mpi == "mpich" and not (osx and arm64)]
 
 test:
   commands:

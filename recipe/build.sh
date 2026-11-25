@@ -3,7 +3,8 @@ set -ex
 
 if [ "${mpi}" != "nompi" ]; then
   MPI=ON
-  if [ "${target_platform}" != "osx-arm64" ]; then
+  # elsi is not available for osx-arm64, nor for openmpi 5
+  if [ "${target_platform}" != "osx-arm64" ] && [ "${mpi}" != "openmpi" ]; then
     ELSI=ON
   else
     ELSI=OFF
